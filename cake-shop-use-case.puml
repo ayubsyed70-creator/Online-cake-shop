@@ -1,0 +1,64 @@
+@startuml cake-shop-use-case
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Customer
+actor "Bakery Staff" as Bakery
+actor "Delivery Partner" as Delivery
+actor Admin
+
+rectangle "Online Cake Shop" {
+
+  usecase "Browse & Search Cakes" as UC1
+  usecase "View Cake Details" as UC2
+  usecase "Customize Cake" as UC3
+  usecase "Add to Cart" as UC4
+  usecase "Checkout & Pay" as UC5
+  usecase "Process Payment" as UC5a
+  usecase "Track Order Status" as UC6
+  usecase "Receive Cake" as UC7
+  usecase "Rate & Review Order" as UC8
+
+  usecase "View Order Details" as UC9
+  usecase "Prepare Cake" as UC10
+  usecase "Perform Quality Check" as UC11
+  usecase "Package Cake" as UC12
+
+  usecase "Accept Pickup" as UC13
+  usecase "Update Delivery Status" as UC14
+
+  usecase "Manage Catalog" as UC15
+  usecase "View Orders Dashboard" as UC16
+  usecase "View Sales Reports" as UC17
+}
+
+' Customer
+Customer -- UC1
+Customer -- UC2
+Customer -- UC4
+Customer -- UC5
+Customer -- UC6
+Customer -- UC7
+Customer -- UC8
+
+' Bakery Staff
+Bakery -- UC9
+Bakery -- UC10
+Bakery -- UC11
+Bakery -- UC12
+
+' Delivery Partner
+Delivery -- UC13
+Delivery -- UC14
+
+' Admin
+Admin -- UC15
+Admin -- UC16
+Admin -- UC17
+
+' Include / extend relationships
+UC5 .> UC5a : <<include>>
+UC3 .> UC2 : <<extend>>
+
+@enduml

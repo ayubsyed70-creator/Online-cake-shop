@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_CakeShop" targetNamespace="http://checkmate.training/cakeshop">
+
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_Customer" name="Customer" processRef="Process_Customer" />
+    <bpmn:participant id="Participant_CakeShop" name="Online Cake Shop" processRef="Process_CakeShop" />
+    <bpmn:participant id="Participant_Delivery" name="Delivery Partner" processRef="Process_Delivery" />
+
+    <bpmn:messageFlow id="MessageFlow_CheckoutToOrderReceived" name="Order + Payment Details"
+                       sourceRef="Task_CheckoutPay" targetRef="StartEvent_OrderReceived" />
+    <bpmn:messageFlow id="MessageFlow_PackageToPickup" name="Ready for Pickup"
+                       sourceRef="Task_PackageCake" targetRef="StartEvent_ReadyPickup" />
+    <bpmn:messageFlow id="MessageFlow_DeliverToConfirm" name="Delivery Confirmation"
+                       sourceRef="Task_Deliver" targetRef="IntCatch_DeliveryConfirmed" />
+    <bpmn:messageFlow id="MessageFlow_DeliverToCustomer" name="Cake Delivered"
+                       sourceRef="Task_Deliver" targetRef="IntCatch_CakeDelivered" />
+  </bpmn:collaboration>
+
+  <!-- ============================= CUSTOMER ============================= -->
+  <bpmn:process id="Process_Customer" name="Customer" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_1" name="Start">
+      <bpmn:outgoing>Flow_C1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:task id="Task_Browse" name="Browse Cakes">
+      <bpmn:incoming>Flow_C1</bpmn:incoming>
+      <bpmn:outgoing>Flow_C2</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Select" name="Select Cake">
+      <bpmn:incoming>Flow_C2</bpmn:incoming>
+      <bpmn:outgoing>Flow_C3</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_CustomizeSplit" name="Customize Cake?">
+      <bpmn:incoming>Flow_C3</bpmn:incoming>
+      <bpmn:outgoing>Flow_C4_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_C4_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_Customize" name="Customize Cake">
+      <bpmn:incoming>Flow_C4_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_C5_FromCustomize</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_CustomizeMerge">
+      <bpmn:incoming>Flow_C4_No</bpmn:incoming>
+      <bpmn:incoming>Flow_C5_FromCustomize</bpmn:incoming>
+      <bpmn:outgoing>Flow_C6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_AddToCart" name="Add to Cart">
+      <bpmn:incoming>Flow_C6</bpmn:incoming>
+      <bpmn:outgoing>Flow_C7</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_CheckoutPay" name="Checkout &amp; Pay">
+      <bpmn:incoming>Flow_C7</bpmn:incoming>
+      <bpmn:outgoing>Flow_C8</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:intermediateCatchEvent id="IntCatch_CakeDelivered" name="Cake Delivered">
+      <bpmn:incoming>Flow_C8</bpmn:incoming>
+      <bpmn:outgoing>Flow_C9</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:task id="Task_ReceiveCake" name="Receive Cake">
+      <bpmn:incoming>Flow_C9</bpmn:incoming>
+      <bpmn:outgoing>Flow_C10</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_RateReview" name="Rate &amp; Review Order">
+      <bpmn:incoming>Flow_C10</bpmn:incoming>
+      <bpmn:outgoing>Flow_C11</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="EndEvent_CustomerDone" name="Order Complete">
+      <bpmn:incoming>Flow_C11</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_C1" sourceRef="StartEvent_1" targetRef="Task_Browse" />
+    <bpmn:sequenceFlow id="Flow_C2" sourceRef="Task_Browse" targetRef="Task_Select" />
+    <bpmn:sequenceFlow id="Flow_C3" sourceRef="Task_Select" targetRef="Gateway_CustomizeSplit" />
+    <bpmn:sequenceFlow id="Flow_C4_Yes" name="Yes" sourceRef="Gateway_CustomizeSplit" targetRef="Task_Customize" />
+    <bpmn:sequenceFlow id="Flow_C4_No" name="No" sourceRef="Gateway_CustomizeSplit" targetRef="Gateway_CustomizeMerge" />
+    <bpmn:sequenceFlow id="Flow_C5_FromCustomize" sourceRef="Task_Customize" targetRef="Gateway_CustomizeMerge" />
+    <bpmn:sequenceFlow id="Flow_C6" sourceRef="Gateway_CustomizeMerge" targetRef="Task_AddToCart" />
+    <bpmn:sequenceFlow id="Flow_C7" sourceRef="Task_AddToCart" targetRef="Task_CheckoutPay" />
+    <bpmn:sequenceFlow id="Flow_C8" sourceRef="Task_CheckoutPay" targetRef="IntCatch_CakeDelivered" />
+    <bpmn:sequenceFlow id="Flow_C9" sourceRef="IntCatch_CakeDelivered" targetRef="Task_ReceiveCake" />
+    <bpmn:sequenceFlow id="Flow_C10" sourceRef="Task_ReceiveCake" targetRef="Task_RateReview" />
+    <bpmn:sequenceFlow id="Flow_C11" sourceRef="Task_RateReview" targetRef="EndEvent_CustomerDone" />
+  </bpmn:process>
+
+  <!-- ============================= ONLINE CAKE SHOP ============================= -->
+  <bpmn:process id="Process_CakeShop" name="Online Cake Shop" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_CakeShop">
+      <bpmn:lane id="Lane_System" name="System">
+        <bpmn:flowNodeRef>StartEvent_OrderReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_PaymentValid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_PaymentFailed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConfirmOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntCatch_DeliveryConfirmed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateDelivery</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_OrderFulfilled</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_BakeryStaff" name="Bakery Staff">
+        <bpmn:flowNodeRef>Task_PrepareCake</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_QualityCheck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PackageCake</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_OrderReceived" name="Order Received">
+      <bpmn:outgoing>Flow_S1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_2" />
+    </bpmn:startEvent>
+
+    <bpmn:exclusiveGateway id="Gateway_PaymentValid" name="Payment Valid?">
+      <bpmn:incoming>Flow_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_Failed</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S2_Success</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="EndEvent_PaymentFailed" name="Payment Failed">
+      <bpmn:incoming>Flow_S2_Failed</bpmn:incoming>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1" />
+    </bpmn:endEvent>
+
+    <bpmn:task id="Task_ConfirmOrder" name="Confirm Order">
+      <bpmn:incoming>Flow_S2_Success</bpmn:incoming>
+      <bpmn:outgoing>Flow_S3_ToBakery</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S3_ToWait</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:intermediateCatchEvent id="IntCatch_DeliveryConfirmed" name="Delivery Confirmed">
+      <bpmn:incoming>Flow_S3_ToWait</bpmn:incoming>
+      <bpmn:outgoing>Flow_S4</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_3" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:task id="Task_UpdateDelivery" name="Update Delivery Status">
+      <bpmn:incoming>Flow_S4</bpmn:incoming>
+      <bpmn:outgoing>Flow_S5</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="EndEvent_OrderFulfilled" name="Order Fulfilled">
+      <bpmn:incoming>Flow_S5</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:task id="Task_PrepareCake" name="Prepare Cake">
+      <bpmn:incoming>Flow_S3_ToBakery</bpmn:incoming>
+      <bpmn:incoming>Flow_B2_Fail</bpmn:incoming>
+      <bpmn:outgoing>Flow_B1</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_QualityCheck" name="Quality OK?">
+      <bpmn:incoming>Flow_B1</bpmn:incoming>
+      <bpmn:outgoing>Flow_B2_Fail</bpmn:outgoing>
+      <bpmn:outgoing>Flow_B2_Pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_PackageCake" name="Package Cake">
+      <bpmn:incoming>Flow_B2_Pass</bpmn:incoming>
+      <bpmn:outgoing>Flow_B3</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:sequenceFlow id="Flow_S1" sourceRef="StartEvent_OrderReceived" targetRef="Gateway_PaymentValid" />
+    <bpmn:sequenceFlow id="Flow_S2_Failed" name="Failed" sourceRef="Gateway_PaymentValid" targetRef="EndEvent_PaymentFailed" />
+    <bpmn:sequenceFlow id="Flow_S2_Success" name="Success" sourceRef="Gateway_PaymentValid" targetRef="Task_ConfirmOrder" />
+    <bpmn:sequenceFlow id="Flow_S3_ToBakery" sourceRef="Task_ConfirmOrder" targetRef="Task_PrepareCake" />
+    <bpmn:sequenceFlow id="Flow_S3_ToWait" sourceRef="Task_ConfirmOrder" targetRef="IntCatch_DeliveryConfirmed" />
+    <bpmn:sequenceFlow id="Flow_S4" sourceRef="IntCatch_DeliveryConfirmed" targetRef="Task_UpdateDelivery" />
+    <bpmn:sequenceFlow id="Flow_S5" sourceRef="Task_UpdateDelivery" targetRef="EndEvent_OrderFulfilled" />
+
+    <bpmn:sequenceFlow id="Flow_B1" sourceRef="Task_PrepareCake" targetRef="Gateway_QualityCheck" />
+    <bpmn:sequenceFlow id="Flow_B2_Fail" name="Fail" sourceRef="Gateway_QualityCheck" targetRef="Task_PrepareCake" />
+    <bpmn:sequenceFlow id="Flow_B2_Pass" name="Pass" sourceRef="Gateway_QualityCheck" targetRef="Task_PackageCake" />
+    <bpmn:sequenceFlow id="Flow_B3" sourceRef="Task_PackageCake" targetRef="Task_UpdateDelivery" />
+  </bpmn:process>
+
+  <!-- ============================= DELIVERY PARTNER ============================= -->
+  <bpmn:process id="Process_Delivery" name="Delivery Partner" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_ReadyPickup" name="Ready for Pickup">
+      <bpmn:outgoing>Flow_D1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_4" />
+    </bpmn:startEvent>
+
+    <bpmn:task id="Task_PickUp" name="Pick Up Cake">
+      <bpmn:incoming>Flow_D1</bpmn:incoming>
+      <bpmn:outgoing>Flow_D2</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_Deliver" name="Deliver Cake">
+      <bpmn:incoming>Flow_D2</bpmn:incoming>
+      <bpmn:outgoing>Flow_D3</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="EndEvent_DeliveryDone" name="Handoff Complete">
+      <bpmn:incoming>Flow_D3</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_D1" sourceRef="StartEvent_ReadyPickup" targetRef="Task_PickUp" />
+    <bpmn:sequenceFlow id="Flow_D2" sourceRef="Task_PickUp" targetRef="Task_Deliver" />
+    <bpmn:sequenceFlow id="Flow_D3" sourceRef="Task_Deliver" targetRef="EndEvent_DeliveryDone" />
+  </bpmn:process>
+
+  <!-- ============================= DIAGRAM (DI) ============================= -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+
+      <!-- Pools -->
+      <bpmndi:BPMNShape id="Participant_Customer_di" bpmnElement="Participant_Customer" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="2350" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_CakeShop_di" bpmnElement="Participant_CakeShop" isHorizontal="true">
+        <dc:Bounds x="30" y="220" width="2350" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="60" y="220" width="2320" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_BakeryStaff_di" bpmnElement="Lane_BakeryStaff" isHorizontal="true">
+        <dc:Bounds x="60" y="370" width="2320" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Delivery_di" bpmnElement="Participant_Delivery" isHorizontal="true">
+        <dc:Bounds x="30" y="520" width="2350" height="180" />
+      </bpmndi:BPMNShape>
+
+      <!-- Customer lane elements -->
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="70" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Browse_di" bpmnElement="Task_Browse">
+        <dc:Bounds x="150" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Select_di" bpmnElement="Task_Select">
+        <dc:Bounds x="300" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CustomizeSplit_di" bpmnElement="Gateway_CustomizeSplit">
+        <dc:Bounds x="450" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Customize_di" bpmnElement="Task_Customize">
+        <dc:Bounds x="550" y="10" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CustomizeMerge_di" bpmnElement="Gateway_CustomizeMerge">
+        <dc:Bounds x="700" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AddToCart_di" bpmnElement="Task_AddToCart">
+        <dc:Bounds x="800" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckoutPay_di" bpmnElement="Task_CheckoutPay">
+        <dc:Bounds x="950" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntCatch_CakeDelivered_di" bpmnElement="IntCatch_CakeDelivered">
+        <dc:Bounds x="1950" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceiveCake_di" bpmnElement="Task_ReceiveCake">
+        <dc:Bounds x="2020" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RateReview_di" bpmnElement="Task_RateReview">
+        <dc:Bounds x="2170" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_CustomerDone_di" bpmnElement="EndEvent_CustomerDone">
+        <dc:Bounds x="2320" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- System lane elements -->
+      <bpmndi:BPMNShape id="StartEvent_OrderReceived_di" bpmnElement="StartEvent_OrderReceived">
+        <dc:Bounds x="1000" y="277" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentValid_di" bpmnElement="Gateway_PaymentValid">
+        <dc:Bounds x="1100" y="270" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_PaymentFailed_di" bpmnElement="EndEvent_PaymentFailed">
+        <dc:Bounds x="1100" y="340" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConfirmOrder_di" bpmnElement="Task_ConfirmOrder">
+        <dc:Bounds x="1220" y="255" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntCatch_DeliveryConfirmed_di" bpmnElement="IntCatch_DeliveryConfirmed">
+        <dc:Bounds x="1950" y="277" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateDelivery_di" bpmnElement="Task_UpdateDelivery">
+        <dc:Bounds x="2020" y="255" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_OrderFulfilled_di" bpmnElement="EndEvent_OrderFulfilled">
+        <dc:Bounds x="2170" y="277" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Bakery Staff lane elements -->
+      <bpmndi:BPMNShape id="Task_PrepareCake_di" bpmnElement="Task_PrepareCake">
+        <dc:Bounds x="1220" y="405" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_QualityCheck_di" bpmnElement="Gateway_QualityCheck">
+        <dc:Bounds x="1370" y="420" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PackageCake_di" bpmnElement="Task_PackageCake">
+        <dc:Bounds x="1470" y="405" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Delivery Partner lane elements -->
+      <bpmndi:BPMNShape id="StartEvent_ReadyPickup_di" bpmnElement="StartEvent_ReadyPickup">
+        <dc:Bounds x="1600" y="592" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PickUp_di" bpmnElement="Task_PickUp">
+        <dc:Bounds x="1680" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Deliver_di" bpmnElement="Task_Deliver">
+        <dc:Bounds x="1830" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_DeliveryDone_di" bpmnElement="EndEvent_DeliveryDone">
+        <dc:Bounds x="1980" y="592" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- Sequence flow edges: Customer -->
+      <bpmndi:BPMNEdge id="Flow_C1_di" bpmnElement="Flow_C1"><di:waypoint x="106" y="130" /><di:waypoint x="150" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C2_di" bpmnElement="Flow_C2"><di:waypoint x="250" y="130" /><di:waypoint x="300" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C3_di" bpmnElement="Flow_C3"><di:waypoint x="400" y="130" /><di:waypoint x="450" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C4_Yes_di" bpmnElement="Flow_C4_Yes"><di:waypoint x="475" y="105" /><di:waypoint x="475" y="50" /><di:waypoint x="550" y="50" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C4_No_di" bpmnElement="Flow_C4_No"><di:waypoint x="500" y="130" /><di:waypoint x="700" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C5_FromCustomize_di" bpmnElement="Flow_C5_FromCustomize"><di:waypoint x="650" y="50" /><di:waypoint x="725" y="50" /><di:waypoint x="725" y="105" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C6_di" bpmnElement="Flow_C6"><di:waypoint x="750" y="130" /><di:waypoint x="800" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C7_di" bpmnElement="Flow_C7"><di:waypoint x="900" y="130" /><di:waypoint x="950" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C8_di" bpmnElement="Flow_C8"><di:waypoint x="1050" y="130" /><di:waypoint x="1968" y="130" /><di:waypoint x="1968" y="112" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C9_di" bpmnElement="Flow_C9"><di:waypoint x="1986" y="130" /><di:waypoint x="2020" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C10_di" bpmnElement="Flow_C10"><di:waypoint x="2120" y="130" /><di:waypoint x="2170" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C11_di" bpmnElement="Flow_C11"><di:waypoint x="2270" y="130" /><di:waypoint x="2320" y="130" /></bpmndi:BPMNEdge>
+
+      <!-- Sequence flow edges: System -->
+      <bpmndi:BPMNEdge id="Flow_S1_di" bpmnElement="Flow_S1"><di:waypoint x="1036" y="295" /><di:waypoint x="1100" y="295" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_Failed_di" bpmnElement="Flow_S2_Failed"><di:waypoint x="1125" y="320" /><di:waypoint x="1125" y="340" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_Success_di" bpmnElement="Flow_S2_Success"><di:waypoint x="1150" y="295" /><di:waypoint x="1220" y="295" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S3_ToBakery_di" bpmnElement="Flow_S3_ToBakery"><di:waypoint x="1270" y="335" /><di:waypoint x="1270" y="405" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S3_ToWait_di" bpmnElement="Flow_S3_ToWait"><di:waypoint x="1320" y="295" /><di:waypoint x="1950" y="295" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S4_di" bpmnElement="Flow_S4"><di:waypoint x="1986" y="295" /><di:waypoint x="2020" y="295" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S5_di" bpmnElement="Flow_S5"><di:waypoint x="2120" y="295" /><di:waypoint x="2170" y="295" /></bpmndi:BPMNEdge>
+
+      <!-- Sequence flow edges: Bakery Staff -->
+      <bpmndi:BPMNEdge id="Flow_B1_di" bpmnElement="Flow_B1"><di:waypoint x="1320" y="445" /><di:waypoint x="1370" y="445" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B2_Fail_di" bpmnElement="Flow_B2_Fail"><di:waypoint x="1395" y="420" /><di:waypoint x="1395" y="380" /><di:waypoint x="1270" y="380" /><di:waypoint x="1270" y="405" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B2_Pass_di" bpmnElement="Flow_B2_Pass"><di:waypoint x="1420" y="445" /><di:waypoint x="1470" y="445" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B3_di" bpmnElement="Flow_B3"><di:waypoint x="1570" y="445" /><di:waypoint x="2070" y="445" /><di:waypoint x="2070" y="335" /></bpmndi:BPMNEdge>
+
+      <!-- Sequence flow edges: Delivery Partner -->
+      <bpmndi:BPMNEdge id="Flow_D1_di" bpmnElement="Flow_D1"><di:waypoint x="1636" y="610" /><di:waypoint x="1680" y="610" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D2_di" bpmnElement="Flow_D2"><di:waypoint x="1780" y="610" /><di:waypoint x="1830" y="610" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D3_di" bpmnElement="Flow_D3"><di:waypoint x="1930" y="610" /><di:waypoint x="1980" y="610" /></bpmndi:BPMNEdge>
+
+      <!-- Message flows (cross-pool, dashed) -->
+      <bpmndi:BPMNEdge id="MessageFlow_CheckoutToOrderReceived_di" bpmnElement="MessageFlow_CheckoutToOrderReceived">
+        <di:waypoint x="1000" y="170" /><di:waypoint x="1018" y="277" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_PackageToPickup_di" bpmnElement="MessageFlow_PackageToPickup">
+        <di:waypoint x="1590" y="485" /><di:waypoint x="1618" y="592" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_DeliverToConfirm_di" bpmnElement="MessageFlow_DeliverToConfirm">
+        <di:waypoint x="1880" y="570" /><di:waypoint x="1968" y="313" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_DeliverToCustomer_di" bpmnElement="MessageFlow_DeliverToCustomer">
+        <di:waypoint x="1855" y="570" /><di:waypoint x="1955" y="148" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>
